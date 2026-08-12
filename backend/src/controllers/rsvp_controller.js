@@ -7,7 +7,7 @@ const createOrUpdateRsvp = async (req, res) => {
     const { meetupId } = req.params;
     const { status } = req.body;
     const userId = req.user.userId;
-    console.log("RSVP request:", { meetupId, status, userId });
+   
 
     if (!VALID_STATUSES.includes(status)) {
       return res.status(400).json({
@@ -18,7 +18,7 @@ const createOrUpdateRsvp = async (req, res) => {
 
     const [meetups] = await pool.execute(
       "SELECT id FROM meetups WHERE id = ?",
-      [meetupId]
+      [meetupId],
     );
 
     if (meetups.length === 0) {
@@ -30,19 +30,19 @@ const createOrUpdateRsvp = async (req, res) => {
 
     const [existingRsvp] = await pool.execute(
       "SELECT id FROM rsvps WHERE user_id = ? AND meetup_id = ?",
-      [userId, meetupId]
+      [userId, meetupId],
     );
 
     if (existingRsvp.length > 0) {
       await pool.execute(
         "UPDATE rsvps SET status = ? WHERE user_id = ? AND meetup_id = ?",
-        [status, userId, meetupId]
+        [status, userId, meetupId],
       );
     } else {
       await pool.execute(
         `INSERT INTO rsvps (user_id, meetup_id, status)
          VALUES (?, ?, ?)`,
-        [userId, meetupId, status]
+        [userId, meetupId, status],
       );
     }
 
@@ -56,7 +56,7 @@ const createOrUpdateRsvp = async (req, res) => {
         r.updated_at
        FROM rsvps r
        WHERE r.user_id = ? AND r.meetup_id = ?`,
-      [userId, meetupId]
+      [userId, meetupId],
     );
 
     return res.status(200).json({
@@ -79,7 +79,7 @@ const getAttendees = async (req, res) => {
 
     const [meetups] = await pool.execute(
       "SELECT id FROM meetups WHERE id = ?",
-      [meetupId]
+      [meetupId],
     );
 
     if (meetups.length === 0) {
@@ -99,7 +99,7 @@ const getAttendees = async (req, res) => {
        JOIN users u ON r.user_id = u.id
        WHERE r.meetup_id = ?
        ORDER BY u.name ASC`,
-      [meetupId]
+      [meetupId],
     );
 
     return res.status(200).json({

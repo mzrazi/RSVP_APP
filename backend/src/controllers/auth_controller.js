@@ -6,24 +6,20 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const [rows] = await pool.execute(
-      "SELECT * FROM users WHERE email = ?",
+    const [rows] = await pool.execute("SELECT * FROM users WHERE email = ?", 
       [email]
     );
 
     if (rows.length === 0) {
       return res.status(401).json({
         success: false,
-        message: "Invalid email or password", 
+        message: "Invalid email or password",
       });
     }
 
     const user = rows[0];
 
-    const passwordMatch = await bcrypt.compare(
-      password,
-      user.password_hash
-    );
+    const passwordMatch = await bcrypt.compare(password, user.password_hash);
 
     if (!passwordMatch) {
       return res.status(401).json({
@@ -39,7 +35,7 @@ const login = async (req, res) => {
       process.env.JWT_SECRET,
       {
         expiresIn: "1h",
-      }
+      },
     );
 
     return res.status(200).json({

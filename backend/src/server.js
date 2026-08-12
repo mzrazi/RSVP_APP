@@ -1,7 +1,7 @@
 const express = require("express");
 const pool = require("./config/db");
 const authRoutes = require("./routes/auth_routes");
-const meetupRoutes = require("./routes/meeetup_routes");  
+const meetupRoutes = require("./routes/meetup_routes");  
 const rsvpRoutes = require("./routes/rsvp_routes"); 
 require("dotenv").config();
 const cors = require("cors");
@@ -10,7 +10,7 @@ const cors = require("cors");
 
 const app = express();
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || true,
+  origin: process.env.CORS_ORIGIN || "http://localhost:3000",
 }));
 app.use(express.json());
 app.use("/api/auth", authRoutes);

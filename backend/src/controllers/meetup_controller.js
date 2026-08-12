@@ -1,21 +1,48 @@
 const pool = require("../config/db");
 
+const validateMeetupInput = ({ title, description, location, event_date }) => {
+  if (!title?.trim() || !location?.trim() || !event_date) {
+    return "Title, location and event date are required";
+  }
+
+  const eventDate = new Date(event_date);
+
+  if (Number.isNaN(eventDate.getTime())) {
+    return "Invalid event date";
+  }
+
+  return null;
+};
+
 const createMeetup = async (req, res) => {
   try {
     const { title, description, location, event_date } = req.body;
-    const ownerId = req.user.userId;
 
+    const validationError = validateMeetupInput({
+      title,
+      location,
+      event_date,
+    });
+
+    if (validationError) {
+      return res.status(400).json({
+        success: false,
+        message: validationError,
+      });
+    }
+
+    const ownerId = req.user.userId;
+    const descriptionValue = description?.trim() || null;
     const [result] = await pool.execute(
       `INSERT INTO meetups
        (title, description, location, event_date, owner_id)
        VALUES (?, ?, ?, ?, ?)`,
-      [title, description, location, event_date, ownerId]
+      [title, descriptionValue, location, event_date, ownerId],
     );
 
-    const [rows] = await pool.execute(
-      "SELECT * FROM meetups WHERE id = ?",
-      [result.insertId]
-    );
+    const [rows] = await pool.execute("SELECT * FROM meetups WHERE id = ?", [
+      result.insertId,
+    ]);
 
     return res.status(201).json({
       success: true,
@@ -81,7 +108,7 @@ const getMeetupById = async (req, res) => {
        FROM meetups m
        JOIN users u ON m.owner_id = u.id
        WHERE m.id = ?`,
-      [id]
+      [id],
     );
 
     if (rows.length === 0) {
@@ -108,20 +135,36 @@ const getMeetupById = async (req, res) => {
 const updateMeetup = async (req, res) => {
   try {
     const { id } = req.params;
+  
+
     const { title, description, location, event_date } = req.body;
+
+    const validationError = validateMeetupInput({
+      title,
+      location,
+      event_date,
+    });
+
+    if (validationError) {
+      return res.status(400).json({
+        success: false,
+        message: validationError,
+      });
+    }
+    const descriptionValue = description?.trim() || null;
     const userId = req.user.userId;
 
     const [result] = await pool.execute(
       `UPDATE meetups
        SET title = ?, description = ?, location = ?, event_date = ?
        WHERE id = ? AND owner_id = ?`,
-      [title, description, location, event_date, id, userId]
+      [title, descriptionValue, location, event_date, id, userId],
     );
 
     if (result.affectedRows === 0) {
       const [meetup] = await pool.execute(
         "SELECT id FROM meetups WHERE id = ?",
-        [id]
+        [id],
       );
 
       if (meetup.length === 0) {
@@ -137,10 +180,9 @@ const updateMeetup = async (req, res) => {
       });
     }
 
-    const [rows] = await pool.execute(
-      "SELECT * FROM meetups WHERE id = ?",
-      [id]
-    );
+    const [rows] = await pool.execute("SELECT * FROM meetups WHERE id = ?", [
+      id,
+    ]);
 
     return res.status(200).json({
       success: true,
@@ -163,13 +205,13 @@ const deleteMeetup = async (req, res) => {
 
     const [result] = await pool.execute(
       "DELETE FROM meetups WHERE id = ? AND owner_id = ?",
-      [id, userId]
+      [id, userId],
     );
 
     if (result.affectedRows === 0) {
       const [meetup] = await pool.execute(
         "SELECT id FROM meetups WHERE id = ?",
-        [id]
+        [id],
       );
 
       if (meetup.length === 0) {
