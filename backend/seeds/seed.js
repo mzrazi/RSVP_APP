@@ -26,7 +26,8 @@ async function seedUsers() {
 
       await pool.execute(
         `INSERT INTO users (name, email, password_hash)
-         VALUES (?, ?, ?)`,
+         VALUES (?, ?, ?)
+         ON DUPLICATE KEY UPDATE name = VALUES(name)`,
         [user.name, user.email, passwordHash]
       );
     }
@@ -34,6 +35,7 @@ async function seedUsers() {
     console.log("Users seeded successfully.");
   } catch (error) {
     console.error("Seeding failed:", error);
+    process.exitCode = 1;
   } finally {
     await pool.end();
   }

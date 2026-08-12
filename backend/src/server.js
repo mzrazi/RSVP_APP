@@ -5,12 +5,13 @@ const meetupRoutes = require("./routes/meeetup_routes");
 const rsvpRoutes = require("./routes/rsvp_routes"); 
 require("dotenv").config();
 const cors = require("cors");
-const authenticate = require("./middleware/auth_middleware");
 
 
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || true,
+}));
 app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/meetups", meetupRoutes);
