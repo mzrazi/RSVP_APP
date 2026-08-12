@@ -1,50 +1,112 @@
 # Local Meetup RSVP Tracker
 
-A full-stack RSVP tracker built with Next.js, Express, and MySQL. Logged-in users can browse meetups, create their own events, edit or delete only their own events, and RSVP as Going, Maybe, or Declined.
+A full-stack local meetup application built with Next.js, Express, and
+MySQL.
 
-## Run the complete application
+Authenticated users can browse meetups, create events, edit or delete
+their own events, RSVP as Going/Maybe/Declined, and view meetup
+attendees.
+
+## Tech Stack
+
+-   **Frontend:** Next.js, React
+-   **Backend:** Node.js, Express
+-   **Database:** MySQL 8.4
+-   **Authentication:** JWT + bcrypt
+-   **Containerization:** Docker, Docker Compose
+
+## Run the Application
 
 From the repository root:
 
-```bash
+``` bash
 docker compose up --build
 ```
 
-This starts the frontend, backend, MySQL database, and a one-off seed service. The seed service initializes the demo accounts automatically using the Node.js seed script; it hashes each password with bcrypt before storing it.
+This starts the complete application, including the MySQL database, seed
+service, backend API, and frontend.
 
-| Service | URL |
-| --- | --- |
-| Frontend | http://localhost:3000 |
-| API | http://localhost:5000 |
-| Health check | http://localhost:5000/api/health |
+No manual database setup or registration is required.
 
-To reset the local database and seed it again:
+### Application URLs
 
-```bash
+  Service        URL
+  -------------- ----------------------------------
+  Frontend       http://localhost:3000
+  API            http://localhost:5000
+  Health Check   http://localhost:5000/api/health
+
+### Reset the Database
+
+To remove the local MySQL volume and recreate the database with seeded
+users:
+
+``` bash
 docker compose down -v
 docker compose up --build
 ```
 
-## Demo accounts
+## Demo Accounts
 
-All seeded users use the password `password123`:
+All seeded users use:
 
-- `raju@example.com`
-- `ahmed@example.com`
-- `sara@example.com`
+`password123`
+
+-   `raju@example.com`
+-   `ahmed@example.com`
+-   `sara@example.com`
 
 ## Architecture
 
-- `frontend/` contains the Next.js App Router UI. The browser API URL is configured with `NEXT_PUBLIC_API_URL` and is set to the backend service's published URL by Docker Compose.
-- `backend/` is an Express REST API, organized into routes, controllers, database configuration, and JWT middleware.
-- `backend/database/schema.sql` defines normalized `users`, `meetups`, and `rsvps` tables. The unique `(user_id, meetup_id)` constraint prevents duplicate RSVPs, and foreign keys prevent orphaned records.
+-   `frontend/` --- Next.js App Router application.
+-   `backend/` --- Express REST API organized into routes, controllers,
+    middleware, and database configuration.
+-   `backend/database/schema.sql` --- normalized relational schema for
+    users, meetups, and RSVPs.
 
-JWT middleware verifies Bearer tokens for all state-changing routes. The backend, rather than the UI, enforces meetup ownership by updating and deleting only where `owner_id` matches the authenticated user's ID.
+Users and meetups have a many-to-many relationship through the `rsvps`
+table. A composite unique constraint on `(user_id, meetup_id)` prevents
+duplicate RSVPs.
 
-## API routes
+Foreign keys enforce referential integrity and prevent orphaned records.
 
-- `POST /api/auth/login`
-- `GET`, `POST /api/meetups`
-- `GET`, `PUT`, `DELETE /api/meetups/:id`
-- `POST /api/rsvps/:meetupId`
-- `GET /api/rsvps/:meetupId/attendees`
+JWT middleware authenticates protected requests. Meetup ownership is
+enforced server-side using the authenticated user's ID rather than
+relying on frontend checks.
+
+## API Routes
+
+### Authentication
+
+``` text
+POST /api/auth/login
+```
+
+### Meetups
+
+``` text
+GET    /api/meetups
+POST   /api/meetups
+GET    /api/meetups/:id
+PUT    /api/meetups/:id
+DELETE /api/meetups/:id
+```
+
+### RSVPs
+
+``` text
+POST /api/rsvps/:meetupId
+PUT  /api/rsvps/:meetupId
+GET  /api/rsvps/:meetupId/attendees
+```
+
+`POST` creates an RSVP. `PUT` updates the authenticated user's existing
+RSVP.
+
+## Security
+
+-   Passwords are hashed with bcrypt.
+-   JWTs are verified server-side for protected routes.
+-   Meetup ownership is enforced by the backend.
+-   SQL queries use parameterized values.
+-   Foreign keys and database constraints enforce data integrity.
