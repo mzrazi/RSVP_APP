@@ -27,6 +27,7 @@ export default function MeetupForm({ initialMeetup, onSubmit, submitLabel }) {
       await onSubmit(form);
     } catch (err) {
       setError(err.message);
+    } finally {
       setSubmitting(false);
     }
   }

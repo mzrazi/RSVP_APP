@@ -21,6 +21,7 @@ function MeetupDetailContent() {
   const router = useRouter();
   const [meetup, setMeetup] = useState(null);
   const [attendees, setAttendees] = useState([]);
+  const [currentUserRsvp, setCurrentUserRsvp] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState("");
@@ -36,6 +37,9 @@ function MeetupDetailContent() {
         ]);
         setMeetup(meetupData.meetup);
         setAttendees(attendeeData.attendees);
+        setCurrentUserRsvp(
+          attendeeData.attendees.find((attendee) => attendee.id === getSession()?.user?.id) || null,
+        );
       } catch (err) {
         setError(err.message);
       } finally {
@@ -50,7 +54,7 @@ function MeetupDetailContent() {
     setActionLoading(status);
     try {
       await api(`/api/rsvps/${id}`, {
-        method: "POST",
+        method: currentUserRsvp ? "PUT" : "POST",
         token: session?.token,
         body: JSON.stringify({ status }),
       });
@@ -58,6 +62,9 @@ function MeetupDetailContent() {
         token: session?.token,
       });
       setAttendees(data.attendees);
+      setCurrentUserRsvp(
+        data.attendees.find((attendee) => attendee.id === session?.user?.id) || null,
+      );
     } catch (err) {
       setError(err.message);
     } finally {
@@ -87,6 +94,7 @@ function MeetupDetailContent() {
       router.push("/meetups");
     } catch (err) {
       setError(err.message);
+    } finally {
       setActionLoading("");
     }
   }

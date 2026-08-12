@@ -31,8 +31,10 @@ export default function LoginPage() {
       router.push("/meetups");
     } catch (err) {
       setError(err.message);
-      setLoading(false);
-    }
+      
+    }finally {
+    setLoading(false);
+  }
   }
 
   return (
